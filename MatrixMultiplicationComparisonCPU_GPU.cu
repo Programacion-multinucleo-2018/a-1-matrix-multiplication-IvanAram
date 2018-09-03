@@ -99,8 +99,14 @@ int main(int argc, char const *argv[]) {
   thread_data_t data[THREADS];
 
   // Set up size of matrix
-  const int rows = 1000;
-  const int cols = 1000;
+  int N;
+  if (argc == 2) {
+    N = atoi(argv[1]);
+  } else {
+    N = 1000;
+  }
+  const int rows = N;
+  const int cols = N;
   printf("Matrix size: rows %d columns %d\n", rows, cols);
 
   int bytes = rows * cols * sizeof(int);
