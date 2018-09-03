@@ -137,7 +137,7 @@ int main(int argc, char const *argv[]) {
   multiplyMatricesOnCPU(matrixA, matrixB, cpu_ref, rows, cols);
   auto end_at = std::chrono::high_resolution_clock::now();
   std::chrono::duration<float, std::milli> duration_ms = end_at - start_at;
-  printf("Multiply matrix on CPU elapsed: %f ms (%.2f seconds)\n", duration_ms.count(), duration_ms.count() / 1000);
+  printf("Multiply matrix on CPU without threads elapsed: %f ms (%.2f seconds)\n", duration_ms.count(), duration_ms.count() / 1000);
 
 
   // Initialize threads data
@@ -162,7 +162,7 @@ int main(int argc, char const *argv[]) {
   }
   end_at =  std::chrono::high_resolution_clock::now();
   duration_ms = end_at - start_at;
-  printf("Multiply matrix on host with threads (%d threads) elapsed: %f ms (%.2f seconds)\n", THREADS, duration_ms.count(), duration_ms.count() / 1000);
+  printf("Multiply matrix on CPU with threads (%d threads) elapsed: %f ms (%.2f seconds)\n", THREADS, duration_ms.count(), duration_ms.count() / 1000);
 
   // Invoke kernel at host side
   int dimx = 512;
