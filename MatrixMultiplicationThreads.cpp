@@ -11,7 +11,7 @@ typedef struct thread_data_struct {
   int cols;
   int *matrixA;
   int *matrixB;
-  int *result;
+  long *result;
 } thread_data_t;
 
 void initializeMatrix(int *matrix, const int rows, const int cols){
@@ -21,7 +21,7 @@ void initializeMatrix(int *matrix, const int rows, const int cols){
 
 void *multiplyMatricesWithThreads(void *args){
   thread_data_t *data = (thread_data_t *) args;
-  int sum;
+  long sum;
   for (size_t i = data->start; i < data->end; i++) {
     for (size_t j = 0; j < data->cols; j++) {
       sum = 0.f;
@@ -38,7 +38,7 @@ int main(int argc, char const *argv[]) {
   // Declare matrices
   int *matrixA;
   int *matrixB;
-  int *result;
+  long *result;
 
   // Set up size of matrix
   const int rows = 1000;
@@ -48,7 +48,7 @@ int main(int argc, char const *argv[]) {
   // Allocate matrices memory
   matrixA = (int *) malloc(rows * cols * sizeof(int));
   matrixB = (int *) malloc(rows * cols * sizeof(int));
-  result = (int *) malloc(rows * cols * sizeof(int));
+  result = (long *) malloc(rows * cols * sizeof(long));
 
   // Initialize matrices
   initializeMatrix(matrixA, rows, cols);

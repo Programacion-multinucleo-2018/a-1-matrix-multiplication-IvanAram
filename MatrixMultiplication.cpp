@@ -6,8 +6,8 @@ void initializeMatrix(int *matrix, const int rows, const int cols){
     matrix[i] = i;
 }
 
-void multiplyMatrices(int *matrixA, int *matrixB, int *result, const int rows, const int cols){
-  int sum;
+void multiplyMatrices(int *matrixA, int *matrixB, long *result, const int rows, const int cols){
+  long sum;
   for (size_t i = 0; i < rows; i++) {
     for (size_t j = 0; j < cols; j++) {
       sum = 0.f;
@@ -23,7 +23,7 @@ int main(int argc, char const *argv[]) {
   // Declare matrices
   int *matrixA;
   int *matrixB;
-  int *result;
+  long *result;
 
   // Set up size of matrix
   const int rows = 1000;
@@ -33,7 +33,7 @@ int main(int argc, char const *argv[]) {
   // Allocate matrices memory
   matrixA = (int *) malloc(rows * cols * sizeof(int));
   matrixB = (int *) malloc(rows * cols * sizeof(int));
-  result = (int *) malloc(rows * cols * sizeof(int));
+  result = (long *) malloc(rows * cols * sizeof(long));
 
   // Initialize matrices
   initializeMatrix(matrixA, rows, cols);

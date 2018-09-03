@@ -9,11 +9,11 @@ void initializeMatrix(int *matrix, const int rows, const int cols){
     matrix[i] = i;
 }
 
-__global__ void multiplyMatricesWithCuda(int *matrixA, int *matrixB, int *result, const int rows, const int cols){
+__global__ void multiplyMatricesWithCuda(int *matrixA, int *matrixB, long *result, const int rows, const int cols){
   unsigned int ix = threadIdx.x + blockIdx.x * blockDim.x;
   unsigned int iy = blockIdx.y;
   if(ix < rows && iy < cols){
-    int sum = 0;
+    long sum = 0;
     for (size_t i = 0; i < cols; i++) {
       sum += matrixA[iy * rows + i] * matrixB[i * cols + ix];
     }
@@ -32,10 +32,10 @@ int main(int argc, char const *argv[]) {
   // Declare matrices
   int *matrixA;
   int *matrixB;
-  int *result;
+  long *result;
   int *dev_matrixA;
   int *dev_matrixB;
-  int *dev_result;
+  long *dev_result;
 
   // Set up size of matrix
   const int rows = 1000;
@@ -43,11 +43,12 @@ int main(int argc, char const *argv[]) {
   printf("Matrix size: rows %d columns %d\n", rows, cols);
 
   int bytes = rows * cols * sizeof(int);
+  int longBytes = rows * cols * sizeof(long);
 
   // Allocate matrices memory
   matrixA = (int *) malloc(bytes);
   matrixB = (int *) malloc(bytes);
-  result = (int *) malloc(bytes);
+  result = (long *) malloc(longBytes);
 
   // Initialize matrices
   initializeMatrix(matrixA, rows, cols);
@@ -56,7 +57,7 @@ int main(int argc, char const *argv[]) {
   // Allocate device global memory
   SAFE_CALL(cudaMalloc((void **)&dev_matrixA, bytes), "Error allocating dev_matrixA");
   SAFE_CALL(cudaMalloc((void **)&dev_matrixB, bytes), "Error allocating dev_matrixB");
-  SAFE_CALL(cudaMalloc((void **)&dev_result, bytes), "Error allocating dev_result");
+  SAFE_CALL(cudaMalloc((void **)&dev_result, longBytes), "Error allocating dev_result");
 
   // Transfer data from host to device
   SAFE_CALL(cudaMemcpy(dev_matrixA, matrixA, bytes, cudaMemcpyHostToDevice), "Error copying dev_matrixA");
@@ -80,7 +81,7 @@ int main(int argc, char const *argv[]) {
   SAFE_CALL(cudaGetLastError(), "Error with last error");
 
   // Copy kernel result back to host side
-  SAFE_CALL(cudaMemcpy(result, dev_result, bytes, cudaMemcpyDeviceToHost), "Error copying dev_result");
+  SAFE_CALL(cudaMemcpy(result, dev_result, longBytes, cudaMemcpyDeviceToHost), "Error copying dev_result");
 
   // Free device global memory
   SAFE_CALL(cudaFree(dev_matrixA), "Error freeing memory");

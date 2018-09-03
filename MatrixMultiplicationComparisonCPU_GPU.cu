@@ -14,17 +14,17 @@ typedef struct thread_data_struct {
   int cols;
   int *matrixA;
   int *matrixB;
-  int *result;
+  long *result;
 } thread_data_t;
 
-int checkResult(int *hostRef, int *gpuRef, const int rows, const int cols){
+int checkResult(long *hostRef, long *gpuRef, const int rows, const int cols){
     double epsilon = 1.0E-8;
     bool match = 1;
 
     for (int i = 0; i < rows * cols; i++){
         if (abs(hostRef[i] - gpuRef[i]) > epsilon){
             match = 0;
-            printf("\nhost: %d | gpu: %d", hostRef[i], gpuRef[i]);
+            printf("\nhost: %li | gpu: %li", hostRef[i], gpuRef[i]);
             break;
         }
     }
@@ -36,11 +36,11 @@ void initializeMatrix(int *matrix, const int rows, const int cols){
     matrix[i] = i;
 }
 
-void multiplyMatricesOnCPU(int *matrixA, int *matrixB, int *result, const int rows, const int cols){
-  int sum;
+void multiplyMatricesOnCPU(int *matrixA, int *matrixB, long *result, const int rows, const int cols){
+  long sum;
   for (size_t i = 0; i < rows; i++) {
     for (size_t j = 0; j < cols; j++) {
-      sum = 0.f;
+      sum = 0;
       for (size_t k = 0; k < cols; k++) {
         sum += matrixA[i * rows + k] * matrixB[k * cols + j];
       }
@@ -51,10 +51,10 @@ void multiplyMatricesOnCPU(int *matrixA, int *matrixB, int *result, const int ro
 
 void *multiplyMatricesWithThreads(void *args){
   thread_data_t *data = (thread_data_t *) args;
-  int sum;
+  long sum;
   for (size_t i = data->start; i < data->end; i++) {
     for (size_t j = 0; j < data->cols; j++) {
-      sum = 0.f;
+      sum = 0;
       for (size_t k = 0; k < data->cols; k++) {
         sum += data->matrixA[i * data->rows + k] * data->matrixB[k * data->cols + j];
       }
@@ -64,11 +64,11 @@ void *multiplyMatricesWithThreads(void *args){
   pthread_exit(NULL);
 }
 
-__global__ void multiplyMatricesOnGPU(int *matrixA, int *matrixB, int *result, const int rows, const int cols){
+__global__ void multiplyMatricesOnGPU(int *matrixA, int *matrixB, long *result, const int rows, const int cols){
   unsigned int ix = threadIdx.x + blockIdx.x * blockDim.x;
   unsigned int iy = blockIdx.y;
   if(ix < rows && iy < cols){
-    int sum = 0;
+    long sum = 0;
     for (size_t i = 0; i < cols; i++) {
       sum += matrixA[iy * rows + i] * matrixB[i * cols + ix];
     }
@@ -87,12 +87,12 @@ int main(int argc, char const *argv[]) {
   // Declare matrices
   int *matrixA;
   int *matrixB;
-  int *threads_result;
-  int *cpu_ref;
+  long *cpu_ref;
   int *dev_matrixA;
   int *dev_matrixB;
-  int *dev_result;
-  int *gpu_ref;
+  long *dev_result;
+  long *gpu_ref;
+  long *threads_result;
 
   // Declare threads and thread data variables
   pthread_t threads[THREADS];
@@ -104,13 +104,14 @@ int main(int argc, char const *argv[]) {
   printf("Matrix size: rows %d columns %d\n", rows, cols);
 
   int bytes = rows * cols * sizeof(int);
+  int longBytes = rows * cols * sizeof(long);
 
   // Allocate matrices memory
   matrixA = (int *) malloc(bytes);
   matrixB = (int *) malloc(bytes);
-  cpu_ref = (int *) malloc(bytes);
-  gpu_ref = (int *) malloc(bytes);
-  threads_result = (int *) malloc(bytes);
+  cpu_ref = (long *) malloc(longBytes);
+  gpu_ref = (long *) malloc(longBytes);
+  threads_result = (long *) malloc(longBytes);
 
   // Initialize matrices
   initializeMatrix(matrixA, rows, cols);
@@ -119,7 +120,7 @@ int main(int argc, char const *argv[]) {
   // malloc device global memory
   SAFE_CALL(cudaMalloc((void **)&dev_matrixA, bytes), "Error allocating dev_matrixA");
   SAFE_CALL(cudaMalloc((void **)&dev_matrixB, bytes), "Error allocating dev_matrixB");
-  SAFE_CALL(cudaMalloc((void **)&dev_result, bytes), "Error allocating dev_result");
+  SAFE_CALL(cudaMalloc((void **)&dev_result, longBytes), "Error allocating dev_result");
 
   // transfer data from host to device
   SAFE_CALL(cudaMemcpy(dev_matrixA, matrixA, bytes, cudaMemcpyHostToDevice), "Error copying dev_matrixA");
@@ -175,7 +176,7 @@ int main(int argc, char const *argv[]) {
   SAFE_CALL(cudaGetLastError(), "Error with last error");
 
   // Copy kernel result back to host side
-  SAFE_CALL(cudaMemcpy(gpu_ref, dev_result, bytes, cudaMemcpyDeviceToHost), "Error copying dev_result");
+  SAFE_CALL(cudaMemcpy(gpu_ref, dev_result, longBytes, cudaMemcpyDeviceToHost), "Error copying dev_result");
 
   // Check device results
   if(checkResult(cpu_ref, gpu_ref, rows, cols) && checkResult(threads_result, gpu_ref, rows, cols)){
