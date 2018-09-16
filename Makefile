@@ -17,8 +17,8 @@ PROG4 = MatrixMultiplicationComparisonCPU_GPU.cu
 all:
 	$(C_C) -o $(EXE1) $(PROG1) $(CFLAGS)
 	$(C_C) -o $(EXE2) $(PROG2) $(CFLAGS) $(LDFLAGS)
-	$(CUDA_C) -o $(EXE3) $(PROG3)
-	$(CUDA_C) -o $(EXE4) $(PROG4) $(LDFLAGS)
+	$(CUDA_C) -o $(EXE3) $(PROG3) $(CFLAGS)
+	$(CUDA_C) -o $(EXE4) $(PROG4) $(CFLAGS) $(LDFLAGS)
 
 rebuild: clean all
 
